@@ -85,7 +85,6 @@ the dataset
     g+geom_histogram(binwidth = 2000,col="black",fill="green")+labs(title="Histogram of Number of Steps per Day")+labs(x="Number of Steps per Day",y="Frequency")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
 ![](plot1.png)
-#![](PA1_template_files/figure-markdown_strict/histogram-1.png)
 
 1.  Calculate and report the mean and median of the total number of
     steps taken per day
@@ -118,7 +117,7 @@ What is the average daily activity pattern?
     g1 <- ggplot(aversteps,aes(interval,steps))
     g1+geom_line(col="blue")+labs(title="Average Number of Steps per Interval")+labs(x="Interval",y="Average Number of Steps per Interval")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
-![](PA1_template_files/figure-markdown_strict/time%20series%20plot-1.png)
+![](plot2.png)
 
 1.  Which 5-minute interval, on average across all the days in the
     dataset, contains the maximum number of steps?
@@ -156,7 +155,7 @@ understand how many NA value are for each interval
     g2 <- ggplot(mvint,aes(interval))
     g2+geom_histogram(binwidth = 50,col="black",fill="green")+labs(title="Number of NAs by Interval")+labs(x="Interval",y="Frequency of NAs")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
-![](PA1_template_files/figure-markdown_strict/NAs%20values%20per%20interval-1.png)
+![](plot3.png)
 
 We can notice that the number of NAs per interval are evenly distributed
 (considering a binwidth of 50)
@@ -204,7 +203,7 @@ We can notice that the number of NAs per interval are evenly distributed
     b <- g4+geom_histogram(binwidth = 2000,col="black",fill="green")+labs(title="Histogram of Number of Steps per Day replacing NAs by Mean")+labs(x="Number of Steps per Day",y="Frequency")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))+geom_vline(mapping=aes(xintercept=mean(sumsteps$steps),color = "mean"),lwd=1,linetype=1,show.legend = T)+geom_vline(mapping=aes(xintercept=median(sumsteps$steps),color = "median"),lwd=1,linetype=2,show.legend = T)+scale_color_manual(name="Legend",values = c(mean="blue",median="red"))
     grid.arrange(a,b,nrow=2)
 
-![](PA1_template_files/figure-markdown_strict/histogram%20with%20NAs%20changed-1.png)
+![](plot4.png)
 
     #Mean of case eliminating NAs
     m1 <- mean(sumsteps$steps)
@@ -291,7 +290,7 @@ dataset with the filled-in missing values for this part
     g5 <- ggplot(aversteps2,aes(interval,steps))
     g5 + facet_grid(weekdays~.)+geom_line(col="blue")+labs(title="Average Number of Steps per Interval per Day Type")+labs(x="Interval",y="Average Number of Steps per Interval")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
-![](PA1_template_files/figure-markdown_strict/mean%20steps%20and%20plot-1.png)
+![](plot5.png)
 
 We can see that in weekdays, the average number of steps at the
 beginning of the day is greater and start earlier than weekends,
