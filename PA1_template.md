@@ -84,7 +84,8 @@ the dataset
     g <- ggplot(sumsteps,aes(steps))
     g+geom_histogram(binwidth = 2000,col="black",fill="green")+labs(title="Histogram of Number of Steps per Day")+labs(x="Number of Steps per Day",y="Frequency")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
-![](PA1_template_files/figure-markdown_strict/histogram-1.png)
+![](plot1.png)
+#![](PA1_template_files/figure-markdown_strict/histogram-1.png)
 
 1.  Calculate and report the mean and median of the total number of
     steps taken per day
