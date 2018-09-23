@@ -1,25 +1,191 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Course Project Number 1: Reproducible Research"
+output: html_document
 ---
+Created by Carlos Hinrichsen
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Loading Libraries
+
+1. Loading the required libraries
+
+```{r libraries}
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+```
 
 
 ## Loading and preprocessing the data
 
+1. Loading the data
 
+```{r loading}
+fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+a <- download.file(fileUrl,destfile = "C:/Users/Carlos Hinrichsen/Data/RR/w2c1.zip")
+b <- unzip("C:/Users/Carlos Hinrichsen/Data/RR/w2c1.zip")
+y <- read.csv(b, header = T)
+```
+
+2. Preprocessing the data
+
+```{r preprocessing}
+y$date <- as.Date(y$date,format = "%Y-%m-%d")
+```
 
 ## What is mean total number of steps taken per day?
+For this part of the assignment, you can ignore the missing values in the dataset
 
+1. Calculate the total number of steps taken per day
 
+```{r steps}
+y2 <- subset(y,!is.na(y$steps))
+sumsteps <- tapply(y2$steps,y2$date,sum)
+sumsteps <- as.data.frame.table(sumsteps)
+colnames(sumsteps) <- c("date","steps")
+head(sumsteps)
+```
+
+2. Make a histogram of the total number of steps taken each day
+
+```{r histogram}
+g <- ggplot(sumsteps,aes(steps))
+g+geom_histogram(binwidth = 2000,col="black",fill="green")+labs(title="Histogram of Number of Steps per Day")+labs(x="Number of Steps per Day",y="Frequency")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+```
+
+3. Calculate and report the mean and median of the total number of steps taken per day
+
+```{r mean and median}
+meansteps <- mean(sumsteps$steps)
+mediansteps <- median(sumsteps$steps)
+meansteps
+mediansteps
+```
 
 ## What is the average daily activity pattern?
 
+1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
+```{r time series plot}
+aversteps <- tapply(y2$steps,y2$interval,mean)
+aversteps <- as.data.frame.table(aversteps)
+colnames(aversteps) <- c("interval","steps")
+aversteps$interval <- as.numeric(levels(aversteps$interval))[aversteps$interval]
+g1 <- ggplot(aversteps,aes(interval,steps))
+g1+geom_line(col="blue")+labs(title="Average Number of Steps per Interval")+labs(x="Interval",y="Average Number of Steps per Interval")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+```
+
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r max number of steps}
+maxsteps <- subset(aversteps, aversteps$steps==max(aversteps$steps))
+maxsteps$interval
+```
 
 
 ## Imputing missing values
 
+1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
 
+```{r NAs values}
+mval <- sum(is.na(y))
+mval
+```
+
+2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+We will use the strategy of the mean for the 5-minute interval, because we already measured these values in a previous question. Now we will understand how many NA value are for each interval
+
+```{r NAs values per interval}
+mvint <- subset(y,is.na(y$steps))
+g2 <- ggplot(mvint,aes(interval))
+g2+geom_histogram(binwidth = 50,col="black",fill="green")+labs(title="Number of NAs by Interval")+labs(x="Interval",y="Frequency of NAs")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+```
+
+We can notice that the number of NAs per interval are evenly distributed (considering a binwidth of 50)
+
+3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+```{r new data set}
+merged <- merge(mvint,aversteps,by="interval")
+#Order according to date
+order <- arrange(merged,date)
+#Eliminate extra column because of the merge
+order$steps.x <- NULL
+#Rename the name of the third column because of the merge
+colnames(order)[3] <- "steps"
+#Rearrange order of columns for binding
+order <- order[c(3,2,1)]
+#Bind
+binder <- rbind(order,y2)
+head(binder)
+```
+
+4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+```{r histogram with NAs changed}
+sumstepsnew <- tapply(binder$steps,binder$date,sum)
+sumstepsnew <- as.data.frame.table(sumstepsnew)
+colnames(sumstepsnew) <- c("date","steps")
+g3 <- ggplot(sumstepsnew,aes(steps))
+a <- g3+geom_histogram(binwidth = 2000,col="black",fill="green")+labs(title="Histogram of Number of Steps per Day eliminating NAs")+labs(x="Number of Steps per Day",y="Frequency")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))+geom_vline(mapping=aes(xintercept=mean(sumstepsnew$steps),color = "mean"),lwd=1,linetype=1,show.legend = T)+geom_vline(mapping=aes(xintercept=median(sumstepsnew$steps),color = "median"),lwd=1,linetype=2,show.legend = T)+scale_color_manual(name="Legend",values = c(mean="blue",median="red"))
+g4 <- ggplot(sumsteps,aes(steps))
+b <- g4+geom_histogram(binwidth = 2000,col="black",fill="green")+labs(title="Histogram of Number of Steps per Day replacing NAs by Mean")+labs(x="Number of Steps per Day",y="Frequency")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))+geom_vline(mapping=aes(xintercept=mean(sumsteps$steps),color = "mean"),lwd=1,linetype=1,show.legend = T)+geom_vline(mapping=aes(xintercept=median(sumsteps$steps),color = "median"),lwd=1,linetype=2,show.legend = T)+scale_color_manual(name="Legend",values = c(mean="blue",median="red"))
+grid.arrange(a,b,nrow=2)
+#Mean of case eliminating NAs
+m1 <- mean(sumsteps$steps)
+m1
+#Median of case eliminating NAs
+md1 <- median(sumsteps$steps)
+md1
+#Mean of case replacing NAs by Mean
+m2 <- mean(sumstepsnew$steps)
+m2
+#Median of case replacing NAs by Mean
+md2 <- median(sumstepsnew$steps)
+md2
+```
+
+```{r calculate change}
+change <- paste((md2-md1)/md1*100,"%")
+change
+```
+
+Therefore, even though there is a difference in the median, is very small. Additionally, we can see that the mean is the same, because we replaced the NAs values by the mean value by interval.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+For this part the weekdays function may be of some help here. Use the dataset with the filled-in missing values for this part
+
+1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day
+
+```{r weekday or weekend day}
+#Save the local system (in case is not an english environment), for dates in english purposes (if apply)
+old.system <- Sys.getlocale("LC_TIME")
+#Sets the local system into "English", for dates in english purposes
+Sys.setlocale("LC_TIME", "English")
+binder$days <- as.factor(weekdays(binder$date))
+binder$weekdays <- as.factor(ifelse(binder$days=="Sunday"|binder$days=="Saturday", "weekend", "weekday"))
+binder$days <- NULL
+head(binder)
+```
+
+```{r return local system}
+#Set the local system into the old
+Sys.setlocale("LC_TIME",old.system)
+```
+
+2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+
+```{r mean steps and plot}
+aversteps2 <- tapply(binder$steps,list(binder$interval,binder$weekdays),mean)
+aversteps2 <- as.data.frame.table(aversteps2)
+colnames(aversteps2) <- c("interval","weekdays","steps")
+aversteps2$interval <- as.numeric(levels(aversteps2$interval))[aversteps2$interval]
+g5 <- ggplot(aversteps2,aes(interval,steps))
+g5 + facet_grid(weekdays~.)+geom_line(col="blue")+labs(title="Average Number of Steps per Interval per Day Type")+labs(x="Interval",y="Average Number of Steps per Interval")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+```
+
+We can see that in weekdays, the average number of steps at the beginning of the day is greater and start earlier than weekends, particularly because of the work. In contrast, during the day the average number of steps is greater in weekend days than weekdays. This, because we can infer that in the office (or a regular job), people tend to be seated, but in the weekends people tend to have different kind of activities  
